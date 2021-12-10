@@ -50,11 +50,27 @@ uint8_t select_file(uint32_t num)
         return 1;
     }
 }
-void File_Output(void)
+//void File_Output(void)
+//{
+//    ID_Increase();//序列增加
+//    char *buf = rt_malloc(64);
+//    sprintf(buf,"%d 0 %d 0 0 0 0 0 0\n",Global_Nums,Global_Nums%2);
+//    if(select_file(Global_Nums)==0)
+//    {
+//        write_file_1(buf,strlen(buf));
+//    }
+//    else
+//    {
+//        write_file_2(buf,strlen(buf));
+//    }
+//    LOG_D("%s\r\n",buf);
+//    rt_free(buf);
+//}
+void File_Output(uint8_t rf,uint32_t counter)
 {
     ID_Increase();//序列增加
     char *buf = rt_malloc(64);
-    sprintf(buf,"%d 0 %d 0 0 0 0 0 0\n",Global_Nums,Global_Nums%2);
+    sprintf(buf,"M_RF %d Counter %ld\n",rf,counter);
     if(select_file(Global_Nums)==0)
     {
         write_file_1(buf,strlen(buf));
@@ -66,12 +82,3 @@ void File_Output(void)
     LOG_D("%s\r\n",buf);
     rt_free(buf);
 }
-MSH_CMD_EXPORT(File_Output,File_Output);
-void ftest(void)
-{
-    for(uint32_t i=1;i<400000;i++)
-    {
-        File_Output();
-    }
-}
-MSH_CMD_EXPORT(ftest,ftest);

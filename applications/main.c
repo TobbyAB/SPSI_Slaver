@@ -20,6 +20,8 @@ int main(void)
 {
     flash_Init();
     ID_Init();
+    rf_433_start();
+    rf_4068_start();
     while (1)
     {
         rt_thread_mdelay(1000);

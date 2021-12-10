@@ -9,7 +9,9 @@
  */
 #ifndef APPLICATIONS_FILE_H_
 #define APPLICATIONS_FILE_H_
+#include "stdint.h"
 
 void ID_Init(void);
+void File_Output(uint8_t rf,uint32_t counter);
 
 #endif /* APPLICATIONS_FILE_H_ */

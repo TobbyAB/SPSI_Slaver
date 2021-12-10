@@ -23,45 +23,53 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-uint8_t Learn_Flag=1;
-uint32_t Main_ID = 0;
-extern uint32_t Self_Id;
-extern int ubRssi;
-
-void NormalSolve(uint8_t *rx_buffer,uint8_t rx_len)
+uint8_t device_select = 0;
+uint32_t counter_433 = 0;
+uint32_t counter_4068 = 0;
+void counter_send(uint8_t rf)
 {
-    Message Rx_message;
-    if(rx_buffer[rx_len-1]==0x0A&&rx_buffer[rx_len-2]==0x0D)
-     {
-         sscanf((const char *)&rx_buffer[1],"{%ld,%ld,%d,%d,%d}",&Rx_message.Target_ID,&Rx_message.From_ID,&Rx_message.Counter,&Rx_message.Command,&Rx_message.Data);
-         if(Rx_message.Target_ID==Self_Id)
-         {
-             LOG_D("NormalSolve verify ok\r\n");
-             switch(Rx_message.Command)
-             {
-             case 1://学习
-                 break;
-             }
-         }
-     }
+    char *buf = rt_malloc(64);
+    if(rf)
+    {
+        sprintf(buf,"A{rf is %d,counter is %ld}",rf,counter_433);
+        Normal_send(&rf_433,buf,strlen(buf));
+    }
+    else
+    {
+        sprintf(buf,"A{rf is %d,counter is %ld}",rf,counter_4068);
+        Normal_send(&rf_4068,buf,strlen(buf));
+    }
+    rt_free(buf);
+}
+void rf4068_solve(uint8_t *rx_buffer,uint8_t rx_len)
+{
+    sscanf((const char *)&rx_buffer[2],"{rf is %d,counter is %ld}",&device_select,&counter_4068);
+    File_Output(device_select,counter_4068);
+    counter_send(0);
+}
+void rf433_solve(uint8_t *rx_buffer,uint8_t rx_len)
+{
+    sscanf((const char *)&rx_buffer[2],"{rf is %d,counter is %ld}",&device_select,&counter_433);
+    File_Output(device_select,counter_433);
+    counter_send(1);
 }
 void rf433_rx_callback(uint8_t *rx_buffer,uint8_t rx_len)
 {
-    LOG_I("RX 433 is %s\r\n",rx_buffer);
+    //LOG_I("RX 433 is %s\r\n",rx_buffer);
     switch(rx_buffer[1])
     {
     case 'A':
-        NormalSolve(rx_buffer,rx_len);
+        rf433_solve(rx_buffer,rx_len);
         break;
     }
 }
 void rf4068_rx_callback(uint8_t *rx_buffer,uint8_t rx_len)
 {
-    LOG_I("RX 4068 is %s\r\n",rx_buffer);
+    //LOG_I("RX 4068 is %s\r\n",rx_buffer);
     switch(rx_buffer[1])
     {
     case 'A':
-        NormalSolve(rx_buffer,rx_len);
+        rf4068_solve(rx_buffer,rx_len);
         break;
     }
 }
