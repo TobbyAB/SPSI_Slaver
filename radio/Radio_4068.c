@@ -73,6 +73,11 @@ void rf_4068_Init(void)
     rf_4068.config = rf_4068_config_init();
     rf_4068.socket = rf_4068_radio_spi_init();
     strcpy(rf_4068.name,"rf_4068");
+
+    /*选频后，赋值给注册数组*/
+    set_registers_4068[82][1] = simple_autorange_pll(&rf_4068);
+
+
     memcpy(rf_4068.RegValue,set_registers_4068,sizeof(set_registers_4068));
     memcpy(rf_4068.TXRegValue,set_registers_tx_4068,sizeof(set_registers_tx_4068));
     memcpy(rf_4068.RXRegValue,set_registers_rx_4068,sizeof(set_registers_rx_4068));
@@ -148,6 +153,7 @@ void rf_4068_task_callback(void *parameter)
                 break;
             case trxstate_tx_waitdone:                 //D
                 rt_timer_stop(rf_4068_send_timer);
+                vcoi_rng_get(&rf_4068);
                 SpiReadSingleAddressRegister(&rf_4068,REG_AX5043_RADIOEVENTREQ0);        //clear Interrupt flag
                 if (SpiReadSingleAddressRegister(&rf_4068,REG_AX5043_RADIOSTATE) != 0)
                 {
