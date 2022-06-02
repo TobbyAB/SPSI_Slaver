@@ -74,15 +74,20 @@ void rf_4068_Init(void)
     rf_4068.socket = rf_4068_radio_spi_init();
     strcpy(rf_4068.name,"rf_4068");
 
-    /*选频后，赋值给注册数组*/
-    set_registers_4068[82][1] = simple_autorange_pll(&rf_4068);
-
-
     memcpy(rf_4068.RegValue,set_registers_4068,sizeof(set_registers_4068));
     memcpy(rf_4068.TXRegValue,set_registers_tx_4068,sizeof(set_registers_tx_4068));
     memcpy(rf_4068.RXRegValue,set_registers_rx_4068,sizeof(set_registers_rx_4068));
     IRQ2_Bounding();
     rf_startup(&rf_4068);
+
+    /*选频后，赋值给注册数组*/
+    LOG_W("VCOIcccccccccccccccc %x\r\n",set_registers_4068[82][1]);
+    set_registers_4068[82][1] = simple_autorange_pll(&rf_4068);
+//    set_registers_4068[82][1] = 0xbb;
+    LOG_W("VCOIddddddddddddddddd %x\r\n",set_registers_4068[82][1]);
+    memcpy(rf_4068.RegValue,set_registers_4068,sizeof(set_registers_4068));
+    rf_startup(&rf_4068);
+
     vcoi_rng_get(&rf_4068);
     Ax5043SetRegisters_RX(&rf_4068);
     Ax5043ReceiverON(&rf_4068);
