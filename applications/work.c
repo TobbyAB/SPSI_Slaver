@@ -73,7 +73,7 @@ void valve_timeout(void *parameter)
 {
     psi_lost = 1;
     beep_start(2);
-    valve_control(3);
+    valve_control(2);
 }
 void long_heart(void)
 {
