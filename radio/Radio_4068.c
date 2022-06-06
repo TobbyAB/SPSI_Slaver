@@ -54,7 +54,8 @@ struct ax5043_config *rf_4068_config_init(void)
     config->axradio_phy_chanvcoiinit[0] = 0x00;
     config->axradio_phy_chanpllrnginit[0] = 0xFF;
     config->axradio_phy_maxfreqoffset = 157;
-    config->axradio_phy_rssireference = 0x3A;
+    //    config->axradio_phy_rssireference = 0x3A;
+    config->axradio_phy_rssireference = 0x36;//调整过的RSSI
     config->axradio_phy_rssioffset = 64;
     config->axradio_framing_synclen = 32;
     config->axradio_framing_syncflags = 0x38;
