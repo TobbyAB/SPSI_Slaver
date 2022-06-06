@@ -53,7 +53,7 @@ struct ax5043_config *rf_433_config_init(void)
     config->axradio_phy_chanvcoiinit[0] = 0x99;
     config->axradio_phy_chanpllrnginit[0] = 0x0a;
     config->axradio_phy_maxfreqoffset = 1683;
-    config->axradio_phy_rssireference = 0x3A;
+    config->axradio_phy_rssireference = 0x37;
     config->axradio_phy_rssioffset = 64;
     config->axradio_framing_synclen = 32;
     config->axradio_framing_syncflags = 0x38;
