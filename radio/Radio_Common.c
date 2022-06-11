@@ -644,7 +644,7 @@ void PLLRang_wait_for_xtal(struct ax5043 *dev)
     for(;;)
     {
       data = SpiReadSingleAddressRegister(dev,REG_AX5043_XTALSTATUS);
-      LOG_W("AUTORANG_PLLsdada");
+      LOG_W("AUTORANG_PLL For PLLRang_wait_for_xtal");
         if (data)
             break;
     }

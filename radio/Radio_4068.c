@@ -82,10 +82,10 @@ void rf_4068_Init(void)
     rf_startup(&rf_4068);
 
     /*选频后，赋值给注册数组*/
-    LOG_W("VCOIcccccccccccccccc %x\r\n",set_registers_4068[82][1]);
+    LOG_W("VCOI Initial value:  %x\r\n",set_registers_4068[82][1]);
     set_registers_4068[82][1] = simple_autorange_pll(&rf_4068);
-//    set_registers_4068[82][1] = 0xbb;
-    LOG_W("VCOIddddddddddddddddd %x\r\n",set_registers_4068[82][1]);
+
+    LOG_W("VCOI Correction value: %x\r\n",set_registers_4068[82][1]);
     memcpy(rf_4068.RegValue,set_registers_4068,sizeof(set_registers_4068));
     rf_startup(&rf_4068);
 
