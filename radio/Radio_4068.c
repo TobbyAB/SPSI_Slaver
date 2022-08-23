@@ -21,7 +21,7 @@
 #include "Config_4068.h"
 
 #define DBG_TAG "radio_4068"
-#define DBG_LVL DBG_LOG
+#define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
 struct ax5043 rf_4068;
