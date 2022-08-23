@@ -93,6 +93,7 @@ void rf_4068_Init(void)
     Ax5043SetRegisters_RX(&rf_4068);
     Ax5043ReceiverON(&rf_4068);
 }
+
 void rf_4068_send_timer_callback(void *parameter)
 {
     if(rf_4068.ubRFState != trxstate_rx)
