@@ -656,18 +656,15 @@ void PLLRang_wait_for_xtal(struct ax5043 *dev)
 
 uint8_t simple_autorange_pll(struct ax5043 *dev)
 {
-//    uint8_t pllloop_save;
-//    uint8_t  pllcpi_save;
-    uint8_t  pllrng,minvcoi;
-    uint8_t range_num = 0,range_oldnum = 0;
-    uint8_t range_table[10],range_tableold[10];
+    uint8_t  pllrng ;
+    uint8_t  VcoiF,VcoiF_max = 0,RangeMin = 0;
+    uint8_t  VcoiF_num = 0;
+    uint8_t VcoiF_table[30],Range_table[30],VcoiF_table_chose[30];
 
-//    uint8_t rngcount;
-//    uint8_t numirq1;
-    range_table[0] = 0;
-    range_tableold[0]=0;
 
-    uint8_t num=0;
+    VcoiF_table_chose[0]=0;
+    VcoiF_table[0] = 0;
+    Range_table[0] = 0;
 
 
     SpiReadSingleAddressRegister(dev,REG_AX5043_PLLLOOP);
@@ -677,17 +674,18 @@ uint8_t simple_autorange_pll(struct ax5043 *dev)
 
     //IE_4 = 1; // enable radio interrupt
     SpiWriteSingleAddressRegister(dev,REG_AX5043_PWRMODE , AX5043_PWRSTATE_XTAL_ON); // start crystal
+
     PLLRang_wait_for_xtal(dev);
 
 //    IWDG_ReloadCounter();
 
-    //在下面检索0x80-0xbf NEW CAL PLLVCOI VALUE 开始
-    pllrng = 0x20;
-    for(uint8_t i = 0xa2 ; (i < 0xbf) ; i ++)
+    //在下面检索0xa2-0xbf NEW CAL PLLVCOI VALUE 开始
+    VcoiF = 0xa2 ;
+    while(VcoiF < 0xbf)
     {
       SpiWriteSingleAddressRegister(dev,REG_AX5043_IRQMASK1 , 0x00);
 
-      SpiWriteLongAddressRegister(dev,REG_AX5043_PLLVCOI,i);                //vcoi
+      SpiWriteLongAddressRegister(dev,REG_AX5043_PLLVCOI,VcoiF);                //vcoi
 
       SpiWriteSingleAddressRegister(dev,REG_AX5043_IRQMASK1 , 0x10); // enable pll autoranging done interrupt
 
@@ -700,48 +698,78 @@ uint8_t simple_autorange_pll(struct ax5043 *dev)
               break;
       }
       SpiWriteSingleAddressRegister(dev,REG_AX5043_IRQMASK1 , 0x00);
+
       pllrng = SpiReadSingleAddressRegister(dev,REG_AX5043_PLLRANGINGA);
-
-      LOG_D("40.67MHz Pllrang vcio=%.2X,rang=%.2X\r\n",i,pllrng);
-//      LOG_D("40.67MHz Pllrang %d\r\n",pllrang);
-
-
-
-      if((pllrng & 0x20) == 0)
+     if(pllrng & 0x20)
       {
-        pllrng = pllrng & 0x0f;
-
-        if(pllrng != range_oldnum)
-        {
-          range_oldnum = pllrng;
-          range_table[range_num] = i;
-      range_tableold[range_num] = pllrng;
-          range_num ++;
-        }
-        else if(range_table[range_num-1] < i)
-        {
-          range_table[range_num-1] = i;
-        }
+          VcoiF++;
+          continue;
       }
-//      rngcount = 0;
-    }
-    range_oldnum=0x0F;
-    for(uint8_t i=0;i<range_num;i++)
+      LOG_D("40.67MHz Pllrang vcio=%.2X,rang=%.2X\r\n",VcoiF,pllrng);
+
+      VcoiF_table[VcoiF_num] = VcoiF;
+      Range_table[VcoiF_num] = pllrng;
+      LOG_D("40.67MHz VcoiF_table %.2X\r\n",VcoiF_table[VcoiF_num]);
+      LOG_D("40.67MHz Range_table %.2X\r\n",Range_table[VcoiF_num]);
+      VcoiF_num ++;
+      VcoiF++;
+    } //while end
+    LOG_D("40.67MHz VcoiF_num %d\r\n",VcoiF_num);
+
+
+    /*遍历选出最小的Rang值*/
+    RangeMin = Range_table[0];
+    LOG_D("40.67MHz VcoiF_min value %.2X\r\n",RangeMin);
+    uint8_t i = 0;
+    while(i < VcoiF_num)
     {
-      if(range_tableold[i] <=range_oldnum)
-      {
-        range_oldnum=range_tableold[i];
-        num=i;
-      }
+        if (Range_table[i] < RangeMin)
+        {
+            RangeMin = Range_table[i];
+            LOG_D("40.67MHz VcoiF_min every value %.2X\r\n",RangeMin);
+        }
+        i+=1;
+        LOG_D("40.67MHz VcoiF_num %d\r\n",i);
     }
-    minvcoi = range_table[num];
 
-   LOG_D("40.67MHz Pllrang minvcoi=%.2X\r\n",minvcoi);
-    //在这里设置最优的range
-   SpiWriteLongAddressRegister(dev,REG_AX5043_PLLVCOI,minvcoi);
-   //vcoi
+    LOG_D("40.67MHz VcoiF_min value :%.2X\r\n",RangeMin);
 
-    //在下面检索0x80-0xbf NEW CAL PLLVCOI VALUE 结束
+    /*选出最小的Rang值中所有的VCOI的值 */
+    uint8_t j = 0,VcoiFmaxNum = 0;
+    while(j < VcoiF_num)
+    {
+        if (Range_table[j] == RangeMin)
+        {
+            VcoiF_table_chose[VcoiFmaxNum] = VcoiF_table[j];
+            LOG_D("40.67MHz VcoiF_table_chose value :%.2X\r\n",VcoiF_table_chose[VcoiFmaxNum]);
+            VcoiFmaxNum++;
+        }
+        j++;
+    }
+
+    LOG_D("40.67MHz VcoiFmaxNum value :%d\r\n",VcoiFmaxNum);
+
+    /*选出最小的Rang值中所有的VCOI的值中取最大的VCOI */
+    VcoiF_max = VcoiF_table_chose[0];
+    LOG_D("40.67MHz original VcoiF_max value %.2X\r\n",VcoiF_max);
+    uint8_t k = 0;
+    while(k < VcoiFmaxNum)
+    {
+        if (VcoiF_table_chose[k] > VcoiF_max)
+        {
+            VcoiF_max = VcoiF_table_chose[k];
+            LOG_D("40.67MHz VcoiFmaxNum every value %.2X\r\n",VcoiF_max);
+        }
+        k+=1;
+        LOG_D("40.67MHz VcoiFmaxNum %d\r\n",k);
+    }
+
+    LOG_D("40.67MHz Last VcoiFmaxNum value :%.2X\r\n",VcoiF_max);
+
+    /*选出最小的Rang值中所有的VCOI的值中取最大的VCOI写入 */
+   SpiWriteLongAddressRegister(dev,REG_AX5043_PLLVCOI,VcoiF_max);
+
+//    检索0xA2-0xbf NEW CAL PLLVCOI VALUE 结束
 
    SpiWriteSingleAddressRegister(dev,REG_AX5043_IRQMASK1 , 0x10); // enable pll autoranging done interrupt
    SpiWriteSingleAddressRegister(dev,REG_AX5043_PLLRANGINGA , 0x18); // init ranging process starting from range 8
@@ -752,12 +780,9 @@ uint8_t simple_autorange_pll(struct ax5043 *dev)
     }
     SpiWriteSingleAddressRegister(dev,REG_AX5043_IRQMASK1 , 0x00);
     pllrng = SpiReadSingleAddressRegister(dev,REG_AX5043_PLLRANGINGA);
-
     SpiWriteSingleAddressRegister(dev,REG_AX5043_PWRMODE , 0x0c);
 
-
-
-    return minvcoi; // ranging ok, keep crystal running
+    return VcoiF_max; // ranging ok, keep crystal running
 
 }
 
