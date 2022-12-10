@@ -53,7 +53,10 @@ void vcoi_rng_get(struct ax5043 *dev)
 void InitAx5043REG(struct ax5043 *dev)
 {
     static uint8_t i;
-
+    if (dev->name == "rf_4068")
+    {
+        SetAutoRangValue(dev);
+    }
     for (i = 0; i < 125; i++)
     {
         SpiWriteLongAddressRegister(dev, dev->RegValue[i][0], dev->RegValue[i][1]);

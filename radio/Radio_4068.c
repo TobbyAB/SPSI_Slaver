@@ -80,15 +80,6 @@ void rf_4068_Init(void)
     memcpy(rf_4068.RXRegValue,set_registers_rx_4068,sizeof(set_registers_rx_4068));
     IRQ2_Bounding();
     rf_startup(&rf_4068);
-
-    /*选频后，赋值给注册数组*/
-    LOG_W("VCOI Initial value:  %x\r\n",set_registers_4068[82][1]);
-    set_registers_4068[82][1] = simple_autorange_pll(&rf_4068);
-
-    LOG_W("VCOI Correction value: %x\r\n",set_registers_4068[82][1]);
-    memcpy(rf_4068.RegValue,set_registers_4068,sizeof(set_registers_4068));
-    rf_startup(&rf_4068);
-
     vcoi_rng_get(&rf_4068);
     Ax5043SetRegisters_RX(&rf_4068);
     Ax5043ReceiverON(&rf_4068);
@@ -177,6 +168,17 @@ void rf_4068_task_callback(void *parameter)
         }
     }
 }
+
+void SetAutoRangValue(struct ax5043 *dev)
+{
+    /*选频后，赋值给注册数组*/
+    LOG_D("VCOI Initial value:  %x\r\n", set_registers_4068[82][1]);
+    set_registers_4068[82][1] = simple_autorange_pll(dev);
+
+    LOG_D("VCOI Correction value: %x\r\n", set_registers_4068[82][1]);
+    memcpy(rf_4068.RegValue, set_registers_4068, sizeof(set_registers_4068));
+}
+
 void rf_4068_start(void)
 {
     rf_4068_sem_init();
